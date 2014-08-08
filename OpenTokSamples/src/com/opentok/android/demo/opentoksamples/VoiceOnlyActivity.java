@@ -176,7 +176,15 @@ public class VoiceOnlyActivity extends Activity implements SessionListener,
 			}
 		}
 	}
-
+	
+	@Override
+	public void onBackPressed() {
+		if (mSession != null) {
+			mSession.disconnect();
+		}
+		super.onBackPressed();
+	}
+	 
 	private void sessionConnect() {
 		if (mSession == null) {
 			mSession = new Session(this, OpenTokConfig.API_KEY,
@@ -188,6 +196,9 @@ public class VoiceOnlyActivity extends Activity implements SessionListener,
 	}
 
 	public void onEndCall(View v) {
+		if ( mSession != null ) {
+			mSession.disconnect();
+		}
 		finish();
 	}
 
@@ -217,6 +228,7 @@ public class VoiceOnlyActivity extends Activity implements SessionListener,
 
 	@Override
 	public void onDisconnected(Session session) {
+		mSession = null;
 	}
 
 	@Override
