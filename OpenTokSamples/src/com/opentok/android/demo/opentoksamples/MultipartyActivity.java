@@ -19,7 +19,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.opentok.android.demo.multiparty.MySession;
-import com.opentok.android.demo.opentokhelloworld.R;
 
 public class MultipartyActivity extends Activity {
 

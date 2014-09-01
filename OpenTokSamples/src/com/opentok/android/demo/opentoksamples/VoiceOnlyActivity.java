@@ -35,7 +35,6 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 import com.opentok.android.demo.config.OpenTokConfig;
-import com.opentok.android.demo.opentokhelloworld.R;
 import com.opentok.android.demo.ui.MeterView;
 import com.opentok.android.demo.ui.MeterView.OnClickListener;
 

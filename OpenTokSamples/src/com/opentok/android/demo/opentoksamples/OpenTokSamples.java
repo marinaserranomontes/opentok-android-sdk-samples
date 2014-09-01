@@ -1,7 +1,5 @@
 package com.opentok.android.demo.opentoksamples;
 
-import com.opentok.android.demo.opentokhelloworld.R;
-
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -23,7 +21,7 @@ import android.widget.ListView;
 public class OpenTokSamples extends Activity {
 
 	private static final String LOGTAG = "demo-opentok-sdk";
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

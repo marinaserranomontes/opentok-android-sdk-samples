@@ -6,12 +6,15 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.MenuItem;
@@ -28,7 +31,8 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 import com.opentok.android.demo.config.OpenTokConfig;
-import com.opentok.android.demo.opentokhelloworld.R;
+import com.opentok.android.demo.services.ClearNotificationService;
+import com.opentok.android.demo.services.ClearNotificationService.ClearBinder;
 
 /**
  * This application demonstrates the basic workflow for getting started with the
@@ -57,6 +61,9 @@ public class HelloWorldActivity extends Activity implements
     private NotificationCompat.Builder mNotifyBuilder;
     NotificationManager mNotificationManager;
     private int notificationId;
+	ServiceConnection mConnection;
+	boolean mIsBound = false;
+	
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,22 +120,46 @@ public class HelloWorldActivity extends Activity implements
             }
         }
 
-        mNotifyBuilder = new NotificationCompat.Builder(this)
-                .setContentTitle(this.getTitle())
-                .setContentText(getResources().getString(R.string.notification))
-                .setSmallIcon(R.drawable.ic_launcher).setOngoing(true);
+      //Add notification to status bar which gets removed if the user force kills the application.
+      		mNotifyBuilder = new NotificationCompat.Builder(this)
+      		.setContentTitle("OpenTokSamples")
+      		.setContentText("Ongoing call")
+      		.setSmallIcon(R.drawable.ic_launcher).setOngoing(true);
 
-        Intent notificationIntent = new Intent(this, HelloWorldActivity.class);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent intent = PendingIntent.getActivity(this, 0,
-                notificationIntent, 0);
+      		Intent notificationIntent = new Intent(this, HelloWorldActivity.class);
+      		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+      		PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+      		mNotifyBuilder.setContentIntent(intent);
+      	    
+      	    //Creates a service which removes the notification after application is forced closed.
+      		if(mConnection == null){
+      			Log.i(LOGTAG, "Service mConnection==null");
+      			mConnection = new ServiceConnection() {
+      				
+      				public void onServiceConnected(ComponentName className,IBinder binder) {
+      					Log.i(LOGTAG, "Service connected");
+      					((ClearBinder) binder).service.startService(new Intent(HelloWorldActivity.this, ClearNotificationService.class));
+      					NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+      					mNotificationManager.notify(ClearNotificationService.NOTIFICATION_ID,
+      							mNotifyBuilder.build());
+      				}
 
-        mNotifyBuilder.setContentIntent(intent);
-        notificationId = (int) System.currentTimeMillis();
-        mNotificationManager.notify(notificationId, mNotifyBuilder.build());
+      				public void onServiceDisconnected(ComponentName className) {
+      					mConnection = null;
+      				}
 
-    }
+      			};
+      		}
+      		if(!mIsBound){
+      			bindService(new Intent(HelloWorldActivity.this,
+      					ClearNotificationService.class), mConnection,
+      					Context.BIND_AUTO_CREATE);
+      			mIsBound = true;
+      			startService(new Intent(ClearNotificationService.MY_SERVICE));
+      		}
+       
+     }
+    
 
     @Override
     public void onResume() {
@@ -142,8 +173,7 @@ public class HelloWorldActivity extends Activity implements
                 mSession.onResume();
             }
         }
-        mNotificationManager.cancel(notificationId);
-
+        mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
         reloadInterface();
     }
 
@@ -151,8 +181,13 @@ public class HelloWorldActivity extends Activity implements
     public void onStop() {
         super.onStop();
 
+        if(mIsBound){
+        	unbindService(mConnection);
+        	mIsBound = false;
+        }
+        	 
         if (isFinishing()) {
-            mNotificationManager.cancel(notificationId);
+        	mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
             if (mSession != null) {
                 mSession.disconnect();
             }
@@ -161,7 +196,12 @@ public class HelloWorldActivity extends Activity implements
 
     @Override
     public void onDestroy() {
-    	mNotificationManager.cancel(notificationId);
+    	
+    	if(mIsBound){
+        	unbindService(mConnection);
+        	mIsBound = false;
+        }
+    	mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
     	if (mSession != null)  {
     		mSession.disconnect();
     	}
