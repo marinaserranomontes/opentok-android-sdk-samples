@@ -193,6 +193,10 @@ public class VoiceOnlyActivity extends Activity implements SessionListener,
 
 		if (mSession != null) {
 			mSession.onResume();
+			
+			if (mPublisher != null){
+				mPublisher.setPublishVideo(false);
+			}
 		}
 		
 		mNotificationManager.cancel(notificationId);
