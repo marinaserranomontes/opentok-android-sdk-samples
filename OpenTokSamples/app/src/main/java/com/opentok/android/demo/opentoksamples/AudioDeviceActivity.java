@@ -1,7 +1,5 @@
 package com.opentok.android.demo.opentoksamples;
 
-import java.util.ArrayList;
-
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -31,8 +29,10 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 import com.opentok.android.demo.audio.CustomAudioDevice;
-import com.opentok.android.demo.services.ClearNotificationService;
 import com.opentok.android.demo.config.OpenTokConfig;
+import com.opentok.android.demo.services.ClearNotificationService;
+
+import java.util.ArrayList;
 
 /**
  * This application demonstrates the basic workflow for getting started with the
@@ -44,12 +44,12 @@ public class AudioDeviceActivity extends Activity implements
         Subscriber.VideoListener {
 
 
-	private static final String LOGTAG = "demo-hello-world";
+    private static final String LOGTAG = "demo-hello-world";
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
     private ArrayList<Stream> mStreams;
-    protected Handler mHandler = new Handler();
+    private Handler mHandler = new Handler();
 
     private RelativeLayout mPublisherViewContainer;
     private RelativeLayout mSubscriberViewContainer;
@@ -59,39 +59,41 @@ public class AudioDeviceActivity extends Activity implements
 
     private boolean resumeHasRun = false;
 
-	private boolean mIsBound = false;
-	private NotificationCompat.Builder mNotifyBuilder;
-	NotificationManager mNotificationManager;
-	ServiceConnection mConnection;
+    private boolean mIsBound = false;
+    private NotificationCompat.Builder mNotifyBuilder;
+    private NotificationManager mNotificationManager;
+    private ServiceConnection mConnection;
 
-   
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.main_layout);
-		
-		ActionBar actionBar = getActionBar();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.main_layout);
+
+        ActionBar actionBar = getActionBar();
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
-		
+
         mPublisherViewContainer = (RelativeLayout) findViewById(R.id.publisherview);
-		mSubscriberViewContainer = (RelativeLayout) findViewById(R.id.subscriberview);
-		mLoadingSub = (ProgressBar) findViewById(R.id.loadingSpinner);
+        mSubscriberViewContainer = (RelativeLayout) findViewById(R.id.subscriberview);
+        mLoadingSub = (ProgressBar) findViewById(R.id.loadingSpinner);
 
-		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-		mStreams = new ArrayList<Stream>();
-		sessionConnect();
-	}
+        mStreams = new ArrayList<Stream>();
+
+        sessionConnect();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case android.R.id.home:
-            onBackPressed();
-            return true;
-        default:
-            return super.onOptionsItemSelected(item);
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -112,35 +114,36 @@ public class AudioDeviceActivity extends Activity implements
                 .setContentText(getResources().getString(R.string.notification))
                 .setSmallIcon(R.drawable.ic_launcher).setOngoing(true);
 
-        Intent notificationIntent = new Intent(this, HelloWorldActivity.class);
+        Intent notificationIntent = new Intent(this, AudioDeviceActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent intent = PendingIntent.getActivity(this, 0,
                 notificationIntent, 0);
 
         mNotifyBuilder.setContentIntent(intent);
-        if(mConnection == null){	    
-        	mConnection = new ServiceConnection() {
-        		@Override
-        		public void onServiceConnected(ComponentName className,IBinder binder){
-        			((ClearNotificationService.ClearBinder) binder).service.startService(new Intent(AudioDeviceActivity.this, ClearNotificationService.class));
-        			NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);					
-        			mNotificationManager.notify(ClearNotificationService.NOTIFICATION_ID, mNotifyBuilder.build());
-        		}
+        if (mConnection == null) {
+            mConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName className, IBinder binder) {
+                    ((ClearNotificationService.ClearBinder) binder).service.startService(new Intent(AudioDeviceActivity.this, ClearNotificationService.class));
+                    NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    mNotificationManager.notify(ClearNotificationService.NOTIFICATION_ID, mNotifyBuilder.build());
+                }
 
-        		@Override
-        		public void onServiceDisconnected(ComponentName className) {
-        			mConnection = null;
-        		}
+                @Override
+                public void onServiceDisconnected(ComponentName className) {
+                    mConnection = null;
+                }
 
-        	};
+            };
         }
 
-        if(!mIsBound){
-        	bindService(new Intent(AudioDeviceActivity.this,
-        			ClearNotificationService.class), mConnection,
-        			Context.BIND_AUTO_CREATE);
-        	mIsBound = true;
+        if (!mIsBound) {
+            bindService(new Intent(AudioDeviceActivity.this,
+                            ClearNotificationService.class), mConnection,
+                    Context.BIND_AUTO_CREATE);
+            mIsBound = true;
+            startService(notificationIntent);
         }
 
     }
@@ -149,11 +152,11 @@ public class AudioDeviceActivity extends Activity implements
     public void onResume() {
         super.onResume();
 
-        if(mIsBound){
-			unbindService(mConnection);
-			mIsBound = false;
-		}
-        
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+
         if (!resumeHasRun) {
             resumeHasRun = true;
             return;
@@ -170,16 +173,16 @@ public class AudioDeviceActivity extends Activity implements
     @Override
     public void onStop() {
         super.onStop();
-        
-        if(mIsBound){
-			unbindService(mConnection);
-			mIsBound = false;
-		}
-        
-        if(mIsBound){
-			unbindService(mConnection);
-			mIsBound = false;
-		}
+
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
         if (isFinishing()) {
             mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
             if (mSession != null) {
@@ -190,30 +193,26 @@ public class AudioDeviceActivity extends Activity implements
 
     @Override
     public void onDestroy() {
-    	mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
-    	if(mIsBound){
-			unbindService(mConnection);
-			mIsBound = false;
-		}
+        mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
 
-    	if (mSession != null)  {
-    		mSession.disconnect();
-    	}
+        if (mSession != null) {
+            mSession.disconnect();
+        }
 
-    	restartAudioMode();
-
-    	super.onDestroy();
-    	finish();
+        super.onDestroy();
+        finish();
     }
-    
+
     @Override
     public void onBackPressed() {
         if (mSession != null) {
             mSession.disconnect();
         }
-        
-        restartAudioMode();
-        
+
         super.onBackPressed();
     }
 
@@ -228,23 +227,17 @@ public class AudioDeviceActivity extends Activity implements
         }, 500);
     }
 
-    public void restartAudioMode() {
-    	AudioManager Audio =  (AudioManager) getSystemService(Context.AUDIO_SERVICE); 
-    	Audio.setMode(AudioManager.MODE_NORMAL);
-    	this.setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
-    }
-    
     private void sessionConnect() {
         if (mSession == null) {
-			// Add a custom audio device before session initialization
-			CustomAudioDevice customAudioDevice = new CustomAudioDevice(
-					AudioDeviceActivity.this);
-			AudioDeviceManager.setAudioDevice(customAudioDevice);
-			
-			mSession = new Session(AudioDeviceActivity.this,
-					OpenTokConfig.API_KEY, OpenTokConfig.SESSION_ID);
-			mSession.setSessionListener(this);
-			mSession.connect(OpenTokConfig.TOKEN);
+            // Add a custom audio device before session initialization
+            CustomAudioDevice customAudioDevice = new CustomAudioDevice(
+                    AudioDeviceActivity.this);
+            AudioDeviceManager.setAudioDevice(customAudioDevice);
+
+            mSession = new Session(AudioDeviceActivity.this,
+                    OpenTokConfig.API_KEY, OpenTokConfig.SESSION_ID);
+            mSession.setSessionListener(this);
+            mSession.connect(OpenTokConfig.TOKEN);
         }
     }
 
@@ -298,9 +291,9 @@ public class AudioDeviceActivity extends Activity implements
     private void attachSubscriberView(Subscriber subscriber) {
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
                 getResources().getDisplayMetrics().widthPixels, getResources()
-                        .getDisplayMetrics().heightPixels);
+                .getDisplayMetrics().heightPixels);
         mSubscriberViewContainer.removeView(mSubscriber.getView());
-        mSubscriberViewContainer.addView(mSubscriber.getView(), layoutParams);
+        mSubscriberViewContainer.addView(subscriber.getView(), layoutParams);
         subscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                 BaseVideoRenderer.STYLE_VIDEO_FILL);
     }
@@ -316,7 +309,7 @@ public class AudioDeviceActivity extends Activity implements
                 RelativeLayout.TRUE);
         layoutParams.bottomMargin = dpToPx(8);
         layoutParams.rightMargin = dpToPx(8);
-        mPublisherViewContainer.addView(mPublisher.getView(), layoutParams);
+        mPublisherViewContainer.addView(publisher.getView(), layoutParams);
     }
 
     @Override
@@ -377,9 +370,8 @@ public class AudioDeviceActivity extends Activity implements
 
     /**
      * Converts dp to real pixels, according to the screen density.
-     * 
-     * @param dp
-     *            A number of density-independent pixels.
+     *
+     * @param dp A number of density-independent pixels.
      * @return The equivalent number of real pixels.
      */
     private int dpToPx(int dp) {
@@ -387,25 +379,25 @@ public class AudioDeviceActivity extends Activity implements
         return (int) (screenDensity * (double) dp);
     }
 
-	@Override
-	public void onVideoDisabled(SubscriberKit subscriber, String reason) {
+    @Override
+    public void onVideoDisabled(SubscriberKit subscriber, String reason) {
         Log.i(LOGTAG,
-                "Video disabled:" + reason);		
-	}
+                "Video disabled:" + reason);
+    }
 
-	@Override
-	public void onVideoEnabled(SubscriberKit subscriber, String reason) {
-        Log.i(LOGTAG,"Video enabled:" + reason);		
-	}
+    @Override
+    public void onVideoEnabled(SubscriberKit subscriber, String reason) {
+        Log.i(LOGTAG, "Video enabled:" + reason);
+    }
 
-	@Override
-	public void onVideoDisableWarning(SubscriberKit subscriber) {
-		Log.i(LOGTAG, "Video may be disabled soon due to network quality degradation. Add UI handling here.");	
-	}
+    @Override
+    public void onVideoDisableWarning(SubscriberKit subscriber) {
+        Log.i(LOGTAG, "Video may be disabled soon due to network quality degradation. Add UI handling here.");
+    }
 
-	@Override
-	public void onVideoDisableWarningLifted(SubscriberKit subscriber) {
-		Log.i(LOGTAG, "Video may no longer be disabled as stream quality improved. Add UI handling here.");
-	}
+    @Override
+    public void onVideoDisableWarningLifted(SubscriberKit subscriber) {
+        Log.i(LOGTAG, "Video may no longer be disabled as stream quality improved. Add UI handling here.");
+    }
 
 }

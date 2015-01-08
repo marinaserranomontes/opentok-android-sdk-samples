@@ -1,7 +1,5 @@
 package com.opentok.android.demo.opentoksamples;
 
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.app.NotificationManager;
@@ -39,8 +37,8 @@ import com.opentok.android.Stream;
 import com.opentok.android.Stream.StreamVideoType;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
-import com.opentok.android.demo.services.ClearNotificationService;
 import com.opentok.android.demo.config.OpenTokConfig;
+import com.opentok.android.demo.services.ClearNotificationService;
 import com.opentok.android.demo.services.ClearNotificationService.ClearBinder;
 import com.opentok.android.demo.ui.AudioLevelView;
 import com.opentok.android.demo.ui.fragments.PublisherControlFragment;
@@ -48,8 +46,10 @@ import com.opentok.android.demo.ui.fragments.PublisherStatusFragment;
 import com.opentok.android.demo.ui.fragments.SubscriberControlFragment;
 import com.opentok.android.demo.ui.fragments.SubscriberQualityFragment;
 
+import java.util.ArrayList;
+
 public class UIActivity extends Activity implements Session.SessionListener,
-       	Session.ArchiveListener,
+        Session.ArchiveListener,
         Session.StreamPropertiesListener, Publisher.PublisherListener,
         Subscriber.VideoListener, Subscriber.SubscriberListener,
         SubscriberControlFragment.SubscriberCallbacks,
@@ -59,10 +59,10 @@ public class UIActivity extends Activity implements Session.SessionListener,
     private static final int ANIMATION_DURATION = 3000;
 
     private Session mSession;
-    protected Publisher mPublisher;
-    protected Subscriber mSubscriber;
+    private Publisher mPublisher;
+    private Subscriber mSubscriber;
     private ArrayList<Stream> mStreams = new ArrayList<Stream>();
-    protected Handler mHandler = new Handler();
+    private Handler mHandler = new Handler();
 
     private boolean mSubscriberAudioOnly = false;
     private boolean archiving = false;
@@ -82,15 +82,15 @@ public class UIActivity extends Activity implements Session.SessionListener,
 
     // Spinning wheel for loading subscriber view
     private ProgressBar mLoadingSub;
-    
+
     private AudioLevelView mAudioLevelView;
-    
+
     private SubscriberQualityFragment.CongestionLevel congestion = SubscriberQualityFragment.CongestionLevel.Low;
-    
-	private boolean mIsBound = false;
-	private NotificationCompat.Builder mNotifyBuilder;
-	NotificationManager mNotificationManager;
-	ServiceConnection mConnection;
+
+    private boolean mIsBound = false;
+    private NotificationCompat.Builder mNotifyBuilder;
+    private NotificationManager mNotificationManager;
+    private ServiceConnection mConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,14 +126,14 @@ public class UIActivity extends Activity implements Session.SessionListener,
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-        case R.id.menu_settings:
-            if (mSubscriber != null) {
-                onViewClick.onClick(null);
-            }
-            return true;
+            case R.id.menu_settings:
+                if (mSubscriber != null) {
+                    onViewClick.onClick(null);
+                }
+                return true;
 
-        default:
-            return super.onOptionsItemSelected(item);
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -150,10 +150,10 @@ public class UIActivity extends Activity implements Session.SessionListener,
                         .remove(mSubscriberFragment).commit();
 
                 initSubscriberFragment();
-                if (mSubscriberQualityFragment != null ){
-                	getFragmentManager().beginTransaction()
-                    .remove(mSubscriberQualityFragment).commit();
-                	initSubscriberQualityFragment();
+                if (mSubscriberQualityFragment != null) {
+                    getFragmentManager().beginTransaction()
+                            .remove(mSubscriberQualityFragment).commit();
+                    initSubscriberQualityFragment();
                 }
             }
         }
@@ -188,14 +188,14 @@ public class UIActivity extends Activity implements Session.SessionListener,
         mSubscriberAudioOnlyView = (RelativeLayout) findViewById(R.id.audioOnlyView);
 
         //Initialize 
-        mAudioLevelView = (AudioLevelView)findViewById(R.id.subscribermeter);
+        mAudioLevelView = (AudioLevelView) findViewById(R.id.subscribermeter);
         mAudioLevelView.setIcons(BitmapFactory.decodeResource(getResources(),
-     					R.drawable.headset));
+                R.drawable.headset));
         // Attach running video views
         if (mPublisher != null) {
             attachPublisherView(mPublisher);
         }
-         
+
         // show subscriber status
         mHandler.postDelayed(new Runnable() {
             @Override
@@ -223,10 +223,10 @@ public class UIActivity extends Activity implements Session.SessionListener,
                 if (mSubscriber != null) {
                     mSubscriberFragment.showSubscriberWidget(true);
                     mSubscriberFragment.initSubscriberUI();
-                    
+
                     if (congestion != SubscriberQualityFragment.CongestionLevel.Low) {
-                    	mSubscriberQualityFragment.setCongestion(congestion);
-                    	mSubscriberQualityFragment.showSubscriberWidget(true);
+                        mSubscriberQualityFragment.setCongestion(congestion);
+                        mSubscriberQualityFragment.showSubscriberWidget(true);
                     }
                 }
             }
@@ -247,7 +247,7 @@ public class UIActivity extends Activity implements Session.SessionListener,
                 }
             }
         }, 0);
-     
+
     }
 
     public void initSubscriberFragment() {
@@ -269,13 +269,13 @@ public class UIActivity extends Activity implements Session.SessionListener,
                 .add(R.id.fragment_pub_status_container,
                         mPublisherStatusFragment).commit();
     }
-    
+
     public void initSubscriberQualityFragment() {
-    	 mSubscriberQualityFragment = new SubscriberQualityFragment();
-         getFragmentManager()
-                 .beginTransaction()
-                 .add(R.id.fragment_sub_quality_container,
-                		 mSubscriberQualityFragment).commit();
+        mSubscriberQualityFragment = new SubscriberQualityFragment();
+        getFragmentManager()
+                .beginTransaction()
+                .add(R.id.fragment_sub_quality_container,
+                        mSubscriberQualityFragment).commit();
     }
 
     @Override
@@ -302,42 +302,43 @@ public class UIActivity extends Activity implements Session.SessionListener,
                 notificationIntent, 0);
 
         mNotifyBuilder.setContentIntent(intent);
-        if(mConnection == null){	    
-	    	mConnection = new ServiceConnection() {
-	    		@Override
-	    		public void onServiceConnected(ComponentName className,IBinder binder){
-	    			((ClearBinder) binder).service.startService(new Intent(UIActivity.this, ClearNotificationService.class));
-	    			NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);					
-	    			mNotificationManager.notify(ClearNotificationService.NOTIFICATION_ID, mNotifyBuilder.build());
-	    		}
+        if (mConnection == null) {
+            mConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName className, IBinder binder) {
+                    ((ClearBinder) binder).service.startService(new Intent(UIActivity.this, ClearNotificationService.class));
+                    NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    mNotificationManager.notify(ClearNotificationService.NOTIFICATION_ID, mNotifyBuilder.build());
+                }
 
-	    		@Override
-	    		public void onServiceDisconnected(ComponentName className) {
-	    			mConnection = null;
-	    		}
+                @Override
+                public void onServiceDisconnected(ComponentName className) {
+                    mConnection = null;
+                }
 
-	    	};
-	    }
+            };
+        }
 
-		if(!mIsBound){
-			Log.d(LOGTAG, "mISBOUND GOT CALLED");
-			bindService(new Intent(UIActivity.this,
-					ClearNotificationService.class), mConnection,
-					Context.BIND_AUTO_CREATE);
-			mIsBound = true;
-		}
+        if (!mIsBound) {
+            Log.d(LOGTAG, "mISBOUND GOT CALLED");
+            bindService(new Intent(UIActivity.this,
+                            ClearNotificationService.class), mConnection,
+                    Context.BIND_AUTO_CREATE);
+            mIsBound = true;
+            startService(notificationIntent);
+        }
 
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        
-        if(mIsBound){
-			unbindService(mConnection);
-			mIsBound = false;
-		}
-        
+
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+
         if (!resumeHasRun) {
             resumeHasRun = true;
             return;
@@ -355,11 +356,11 @@ public class UIActivity extends Activity implements Session.SessionListener,
     @Override
     public void onStop() {
         super.onStop();
-        
-        if(mIsBound){
-			unbindService(mConnection);
-			mIsBound = false;
-		}
+
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
         if (isFinishing()) {
             mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
             if (mSession != null) {
@@ -367,23 +368,21 @@ public class UIActivity extends Activity implements Session.SessionListener,
             }
         }
     }
-    
+
     @Override
     public void onDestroy() {
-    	mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
-    	if(mIsBound){
-			unbindService(mConnection);
-			mIsBound = false;
-		}
-    	
-    	if (mSession != null)  {
-    		mSession.disconnect();
-    	}
-    	
-    	restartAudioMode();
-    	
-    	super.onDestroy();
-    	finish();
+        mNotificationManager.cancel(ClearNotificationService.NOTIFICATION_ID);
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+
+        if (mSession != null) {
+            mSession.disconnect();
+        }
+
+        super.onDestroy();
+        finish();
     }
 
     @Override
@@ -391,17 +390,15 @@ public class UIActivity extends Activity implements Session.SessionListener,
         if (mSession != null) {
             mSession.disconnect();
         }
-        
-        restartAudioMode();
-        
+
         super.onBackPressed();
     }
 
     public void reloadInterface() {
-     	mHandler.postDelayed(new Runnable() {
+        mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (mSubscriber != null) {	
+                if (mSubscriber != null) {
                     attachSubscriberView(mSubscriber);
                     if (mSubscriberAudioOnly) {
                         mSubscriber.getView().setVisibility(View.GONE);
@@ -415,12 +412,6 @@ public class UIActivity extends Activity implements Session.SessionListener,
         loadFragments();
     }
 
-    public void restartAudioMode() {
-    	AudioManager Audio =  (AudioManager) getSystemService(Context.AUDIO_SERVICE); 
-    	Audio.setMode(AudioManager.MODE_NORMAL);
-    	this.setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
-    }
-    
     private void sessionConnect() {
         if (mSession == null) {
             mSession = new Session(this, OpenTokConfig.API_KEY,
@@ -469,8 +460,7 @@ public class UIActivity extends Activity implements Session.SessionListener,
         if (mSession != null) {
             mSession.disconnect();
         }
-        restartAudioMode();
-        
+
         finish();
     }
 
@@ -490,10 +480,10 @@ public class UIActivity extends Activity implements Session.SessionListener,
         mSubscriber.setSubscriberListener(this);
         mSubscriber.setVideoListener(this);
         mSession.subscribe(mSubscriber);
-        
-        if ( mSubscriber.getSubscribeToVideo() ) {
-        	// start loading spinning
-        	mLoadingSub.setVisibility(View.VISIBLE);
+
+        if (mSubscriber.getSubscribeToVideo()) {
+            // start loading spinning
+            mLoadingSub.setVisibility(View.VISIBLE);
         }
     }
 
@@ -509,7 +499,7 @@ public class UIActivity extends Activity implements Session.SessionListener,
     }
 
     private void setAudioOnlyView(boolean audioOnlyEnabled) {
-    	mSubscriberAudioOnly = audioOnlyEnabled;
+        mSubscriberAudioOnly = audioOnlyEnabled;
 
         if (audioOnlyEnabled) {
             mSubscriber.getView().setVisibility(View.GONE);
@@ -522,22 +512,22 @@ public class UIActivity extends Activity implements Session.SessionListener,
             AlphaAnimation aa = new AlphaAnimation(1.0f, 0.0f);
             aa.setDuration(ANIMATION_DURATION);
             subStatusText.startAnimation(aa);
-            
-            
+
+
             mSubscriber
-			.setAudioLevelListener(new SubscriberKit.AudioLevelListener() {
-				@Override
-				public void onAudioLevelUpdated(
-						SubscriberKit subscriber, float audioLevel) {
-					mAudioLevelView.setMeterValue(audioLevel);
-				}
-			});
+                    .setAudioLevelListener(new SubscriberKit.AudioLevelListener() {
+                        @Override
+                        public void onAudioLevelUpdated(
+                                SubscriberKit subscriber, float audioLevel) {
+                            mAudioLevelView.setMeterValue(audioLevel);
+                        }
+                    });
         } else {
             if (!mSubscriberAudioOnly) {
                 mSubscriber.getView().setVisibility(View.VISIBLE);
                 mSubscriberAudioOnlyView.setVisibility(View.GONE);
 
-    			mSubscriber.setAudioLevelListener(null);
+                mSubscriber.setAudioLevelListener(null);
             }
         }
     }
@@ -545,23 +535,23 @@ public class UIActivity extends Activity implements Session.SessionListener,
     private OnClickListener onViewClick = new OnClickListener() {
         @Override
         public void onClick(View v) {
-        	boolean visible = false;
- 
-        	if (mPublisher != null) {
-        		 // check visibility of bars
-            	if (!mPublisherFragment.isMPublisherWidgetVisible()) {
-            		visible = true;
-            	}
-				mPublisherFragment.publisherClick();
-				if (archiving) {
-					mPublisherStatusFragment.publisherClick();
-				}
-                setPubViewMargins();
-            	if (mSubscriber != null) {
-            		mSubscriberFragment.showSubscriberWidget(visible);
-            		mSubscriberFragment.initSubscriberUI();
+            boolean visible = false;
+
+            if (mPublisher != null) {
+                // check visibility of bars
+                if (!mPublisherFragment.isMPublisherWidgetVisible()) {
+                    visible = true;
                 }
-        	}
+                mPublisherFragment.publisherClick();
+                if (archiving) {
+                    mPublisherStatusFragment.publisherClick();
+                }
+                setPubViewMargins();
+                if (mSubscriber != null) {
+                    mSubscriberFragment.showSubscriberWidget(visible);
+                    mSubscriberFragment.initSubscriberUI();
+                }
+            }
         }
     };
 
@@ -626,7 +616,7 @@ public class UIActivity extends Activity implements Session.SessionListener,
         if (!OpenTokConfig.SUBSCRIBE_TO_SELF) {
             if (mSubscriber != null
                     && mSubscriber.getStream().getStreamId()
-                            .equals(stream.getStreamId())) {
+                    .equals(stream.getStreamId())) {
                 mSubscriberViewContainer.removeView(mSubscriber.getView());
                 mSubscriber = null;
                 findViewById(R.id.avatar).setVisibility(View.GONE);
@@ -719,62 +709,62 @@ public class UIActivity extends Activity implements Session.SessionListener,
                 subLayoutParams.bottomMargin = subBottomMargin;
                 mSubscriberAudioOnlyView.setLayoutParams(subLayoutParams);
             }
-            
+
             setSubQualityMargins();
         }
     }
 
-    public void setSubQualityMargins(){
-		RelativeLayout.LayoutParams subQualityLayoutParams = (LayoutParams) mSubscriberQualityFragment
-				.getSubQualityContainer().getLayoutParams();
-		boolean pubControlBarVisible = mPublisherFragment
-				.isMPublisherWidgetVisible();
-		boolean pubStatusBarVisible = mPublisherStatusFragment
-				.isMPubStatusWidgetVisible();
-		RelativeLayout.LayoutParams pubControlLayoutParams = (LayoutParams) mPublisherFragment
-				.getMPublisherContainer().getLayoutParams();
-		RelativeLayout.LayoutParams pubStatusLayoutParams = (LayoutParams) mPublisherStatusFragment
-				.getMPubStatusContainer().getLayoutParams();
-		RelativeLayout.LayoutParams audioMeterLayoutParams = (LayoutParams) mAudioLevelView.getLayoutParams();
-				
-		int bottomMargin = 0;
+    public void setSubQualityMargins() {
+        RelativeLayout.LayoutParams subQualityLayoutParams = (LayoutParams) mSubscriberQualityFragment
+                .getSubQualityContainer().getLayoutParams();
+        boolean pubControlBarVisible = mPublisherFragment
+                .isMPublisherWidgetVisible();
+        boolean pubStatusBarVisible = mPublisherStatusFragment
+                .isMPubStatusWidgetVisible();
+        RelativeLayout.LayoutParams pubControlLayoutParams = (LayoutParams) mPublisherFragment
+                .getMPublisherContainer().getLayoutParams();
+        RelativeLayout.LayoutParams pubStatusLayoutParams = (LayoutParams) mPublisherStatusFragment
+                .getMPubStatusContainer().getLayoutParams();
+        RelativeLayout.LayoutParams audioMeterLayoutParams = (LayoutParams) mAudioLevelView.getLayoutParams();
 
-		// control pub fragment
-		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-			if (pubControlBarVisible) {
-				bottomMargin = pubControlLayoutParams.height + dpToPx(10);
-			}
-			if (pubStatusBarVisible && archiving) {
-				bottomMargin = pubStatusLayoutParams.height + dpToPx(10);
-			}
-			if (bottomMargin == 0) {
-				bottomMargin = dpToPx(10);
-			}
-			subQualityLayoutParams.rightMargin = dpToPx(10);
-		}
+        int bottomMargin = 0;
 
-		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-			if (!pubControlBarVisible) {
-				subQualityLayoutParams.rightMargin = dpToPx(10);
-				bottomMargin = dpToPx(10);
-				audioMeterLayoutParams.rightMargin = 0;
-				mAudioLevelView.setLayoutParams(audioMeterLayoutParams);
-			
-			}else {
-				subQualityLayoutParams.rightMargin = pubControlLayoutParams.width;
-				bottomMargin = dpToPx(10);
-				audioMeterLayoutParams.rightMargin = pubControlLayoutParams.width;
-			}
-			if (pubStatusBarVisible && archiving) {
-				bottomMargin = pubStatusLayoutParams.height + dpToPx(10);
-			}
-			mAudioLevelView.setLayoutParams(audioMeterLayoutParams);
-		}
+        // control pub fragment
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            if (pubControlBarVisible) {
+                bottomMargin = pubControlLayoutParams.height + dpToPx(10);
+            }
+            if (pubStatusBarVisible && archiving) {
+                bottomMargin = pubStatusLayoutParams.height + dpToPx(10);
+            }
+            if (bottomMargin == 0) {
+                bottomMargin = dpToPx(10);
+            }
+            subQualityLayoutParams.rightMargin = dpToPx(10);
+        }
 
-		subQualityLayoutParams.bottomMargin = bottomMargin;
-		
-		mSubscriberQualityFragment.getSubQualityContainer().setLayoutParams(
-				subQualityLayoutParams);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            if (!pubControlBarVisible) {
+                subQualityLayoutParams.rightMargin = dpToPx(10);
+                bottomMargin = dpToPx(10);
+                audioMeterLayoutParams.rightMargin = 0;
+                mAudioLevelView.setLayoutParams(audioMeterLayoutParams);
+
+            } else {
+                subQualityLayoutParams.rightMargin = pubControlLayoutParams.width;
+                bottomMargin = dpToPx(10);
+                audioMeterLayoutParams.rightMargin = pubControlLayoutParams.width;
+            }
+            if (pubStatusBarVisible && archiving) {
+                bottomMargin = pubStatusLayoutParams.height + dpToPx(10);
+            }
+            mAudioLevelView.setLayoutParams(audioMeterLayoutParams);
+        }
+
+        subQualityLayoutParams.bottomMargin = bottomMargin;
+
+        mSubscriberQualityFragment.getSubQualityContainer().setLayoutParams(
+                subQualityLayoutParams);
 
     }
 
@@ -786,7 +776,7 @@ public class UIActivity extends Activity implements Session.SessionListener,
 
     @Override
     public void onConnected(SubscriberKit subscriber) {
-    	mLoadingSub.setVisibility(View.GONE);
+        mLoadingSub.setVisibility(View.GONE);
         mSubscriberFragment.showSubscriberWidget(true);
         mSubscriberFragment.initSubscriberUI();
     }
@@ -816,12 +806,12 @@ public class UIActivity extends Activity implements Session.SessionListener,
         if (mSubscriber == subscriber) {
             setAudioOnlyView(true);
         }
-        
+
         if (reason.equals("quality")) {
-        	mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.High);
-        	congestion = SubscriberQualityFragment.CongestionLevel.High;
-        	setSubQualityMargins();
-        	mSubscriberQualityFragment.showSubscriberWidget(true);
+            mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.High);
+            congestion = SubscriberQualityFragment.CongestionLevel.High;
+            setSubQualityMargins();
+            mSubscriberQualityFragment.showSubscriberWidget(true);
         }
     }
 
@@ -832,33 +822,33 @@ public class UIActivity extends Activity implements Session.SessionListener,
             setAudioOnlyView(false);
         }
         if (reason.equals("quality")) {
-        	mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.Low);
-        	congestion = SubscriberQualityFragment.CongestionLevel.Low;
+            mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.Low);
+            congestion = SubscriberQualityFragment.CongestionLevel.Low;
             mSubscriberQualityFragment.showSubscriberWidget(false);
-        } 
+        }
     }
 
     @Override
     public void onStreamHasAudioChanged(Session session, Stream stream,
-            boolean audioEnabled) {
+                                        boolean audioEnabled) {
         Log.i(LOGTAG, "Stream audio changed");
     }
 
     @Override
     public void onStreamHasVideoChanged(Session session, Stream stream,
-            boolean videoEnabled) {
+                                        boolean videoEnabled) {
         Log.i(LOGTAG, "Stream video changed");
     }
 
     @Override
     public void onStreamVideoDimensionsChanged(Session session, Stream stream,
-            int width, int height) {
+                                               int width, int height) {
         Log.i(LOGTAG, "Stream video dimensions changed");
     }
 
     @Override
     public void onArchiveStarted(Session session, String id, String name) {
-    	Log.i(LOGTAG, "Archiving starts");
+        Log.i(LOGTAG, "Archiving starts");
         mPublisherFragment.showPublisherWidget(false);
 
         archiving = true;
@@ -874,12 +864,12 @@ public class UIActivity extends Activity implements Session.SessionListener,
 
     @Override
     public void onArchiveStopped(Session session, String id) {
-    	Log.i(LOGTAG, "Archiving stops");
+        Log.i(LOGTAG, "Archiving stops");
         archiving = false;
 
         mPublisherStatusFragment.updateArchivingUI(false);
         setPubViewMargins();
-        
+
         if (mSubscriber != null) {
             setSubQualityMargins();
         }
@@ -887,9 +877,8 @@ public class UIActivity extends Activity implements Session.SessionListener,
 
     /**
      * Converts dp to real pixels, according to the screen density.
-     * 
-     * @param dp
-     *            A number of density-independent pixels.
+     *
+     * @param dp A number of density-independent pixels.
      * @return The equivalent number of real pixels.
      */
     public int dpToPx(int dp) {
@@ -898,26 +887,26 @@ public class UIActivity extends Activity implements Session.SessionListener,
     }
 
     @Override
-	public void onVideoDisableWarning(SubscriberKit subscriber) {
-		Log.i(LOGTAG, "Video may be disabled soon due to network quality degradation. Add UI handling here.");	
-		mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.Mid);
-		congestion = SubscriberQualityFragment.CongestionLevel.Mid;
-		setSubQualityMargins();
-		mSubscriberQualityFragment.showSubscriberWidget(true);
-	}
+    public void onVideoDisableWarning(SubscriberKit subscriber) {
+        Log.i(LOGTAG, "Video may be disabled soon due to network quality degradation. Add UI handling here.");
+        mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.Mid);
+        congestion = SubscriberQualityFragment.CongestionLevel.Mid;
+        setSubQualityMargins();
+        mSubscriberQualityFragment.showSubscriberWidget(true);
+    }
 
-	@Override
-	public void onVideoDisableWarningLifted(SubscriberKit subscriber) {
-		Log.i(LOGTAG, "Video may no longer be disabled as stream quality improved. Add UI handling here.");
-		mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.Low);
-		congestion = SubscriberQualityFragment.CongestionLevel.Low;
-		mSubscriberQualityFragment.showSubscriberWidget(false);
-	}
+    @Override
+    public void onVideoDisableWarningLifted(SubscriberKit subscriber) {
+        Log.i(LOGTAG, "Video may no longer be disabled as stream quality improved. Add UI handling here.");
+        mSubscriberQualityFragment.setCongestion(SubscriberQualityFragment.CongestionLevel.Low);
+        congestion = SubscriberQualityFragment.CongestionLevel.Low;
+        mSubscriberQualityFragment.showSubscriberWidget(false);
+    }
 
-	@Override
-	public void onStreamVideoTypeChanged(Session session, Stream stream,
-			StreamVideoType videoType) {
-		  Log.i(LOGTAG, "Stream video type changed");
-	}
+    @Override
+    public void onStreamVideoTypeChanged(Session session, Stream stream,
+                                         StreamVideoType videoType) {
+        Log.i(LOGTAG, "Stream video type changed");
+    }
 
 }

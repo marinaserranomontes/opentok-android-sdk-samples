@@ -1,7 +1,5 @@
 package com.opentok.android.demo.ui.fragments;
 
-import com.opentok.android.demo.opentoksamples.UIActivity;
-
 import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
@@ -14,223 +12,186 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 
+import com.opentok.android.demo.opentoksamples.UIActivity;
+
 public class PublisherControlFragment extends Fragment implements
-		View.OnClickListener {
+        View.OnClickListener {
 
-	private static final String LOGTAG = "demo-UI-pub-control-fragment";
-	private static final int ANIMATION_DURATION = 500;
-	private static final int PUBLISHER_CONTROLS_DURATION = 7000;
+    private static final String LOGTAG = "demo-UI-pub-control-fragment";
+    private static final int ANIMATION_DURATION = 500;
+    private static final int PUBLISHER_CONTROLS_DURATION = 7000;
 
-	private ImageButton mPublisherMute;
-	private ImageButton mSwapCamera;
-	private Button mEndCall;
+    private ImageButton mPublisherMute;
+    private ImageButton mSwapCamera;
+    private Button mEndCall;
 
-	private PublisherCallbacks mCallbacks = sOpenTokCallbacks;
-	private UIActivity openTokActivity;
-	protected boolean mPublisherWidgetVisible = false;
+    private PublisherCallbacks mCallbacks = sOpenTokCallbacks;
+    private UIActivity openTokActivity;
+    private boolean mPublisherWidgetVisible = false;
+    private RelativeLayout mPublisherContainer;
 
-	protected RelativeLayout mPublisherContainer;
+    public interface PublisherCallbacks {
+        public void onMutePublisher();
 
-	public interface PublisherCallbacks {
-		public void onMutePublisher();
+        public void onSwapCamera();
 
-		public void onSwapCamera();
+        public void onEndCall();
+    }
 
-		public void onEndCall();
-	}
+    private static PublisherCallbacks sOpenTokCallbacks = new PublisherCallbacks() {
 
-	private static PublisherCallbacks sOpenTokCallbacks = new PublisherCallbacks() {
+        @Override
+        public void onMutePublisher() {
+        }
 
-		@Override
-		public void onMutePublisher() {
-			return;
-		}
+        @Override
+        public void onSwapCamera() {
+        }
 
-		@Override
-		public void onSwapCamera() {
-			return;
-		}
+        @Override
+        public void onEndCall(){
+        }
+    };
 
-		@Override
-		public void onEndCall() {
-			return;
-		}
-	};
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
 
-	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
+        Log.i(LOGTAG, "On attach Publisher control fragment");
+        openTokActivity = (UIActivity) activity;
+        if (!(activity instanceof PublisherCallbacks)) {
+            throw new IllegalStateException(
+                    "Activity must implement fragment's callback");
+        }
 
-		Log.i(LOGTAG, "On attach Publisher control fragment");
-		openTokActivity = (UIActivity) activity;
-		if (!(activity instanceof PublisherCallbacks)) {
-			throw new IllegalStateException(
-					"Activity must implement fragment's callback");
-		}
+        mCallbacks = (PublisherCallbacks) activity;
+    }
 
-		mCallbacks = (PublisherCallbacks) activity;
-	}
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
 
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-	}
+        View rootView = inflater.inflate(com.opentok.android.demo.opentoksamples.R.layout.layout_fragment_pub_control,
+                container, false);
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
+        mPublisherContainer = (RelativeLayout) openTokActivity
+                .findViewById(com.opentok.android.demo.opentoksamples.R.id.fragment_pub_container);
 
-		View rootView = inflater.inflate(com.opentok.android.demo.opentoksamples.R.layout.layout_fragment_pub_control,
-				container, false);
+        mPublisherMute = (ImageButton) rootView
+                .findViewById(com.opentok.android.demo.opentoksamples.R.id.mutePublisher);
+        mPublisherMute.setOnClickListener(this);
 
-		mPublisherContainer = (RelativeLayout) openTokActivity
-				.findViewById(com.opentok.android.demo.opentoksamples.R.id.fragment_pub_container);
+        mSwapCamera = (ImageButton) rootView.findViewById(com.opentok.android.demo.opentoksamples.R.id.swapCamera);
+        mSwapCamera.setOnClickListener(this);
 
-		mPublisherMute = (ImageButton) rootView
-				.findViewById(com.opentok.android.demo.opentoksamples.R.id.mutePublisher);
-		mPublisherMute.setOnClickListener(this);
+        mEndCall = (Button) rootView.findViewById(com.opentok.android.demo.opentoksamples.R.id.endCall);
+        mEndCall.setOnClickListener(this);
 
-		mSwapCamera = (ImageButton) rootView.findViewById(com.opentok.android.demo.opentoksamples.R.id.swapCamera);
-		mSwapCamera.setOnClickListener(this);
+        return rootView;
+    }
 
-		mEndCall = (Button) rootView.findViewById(com.opentok.android.demo.opentoksamples.R.id.endCall);
-		mEndCall.setOnClickListener(this);
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Log.i(LOGTAG, "On detach Publisher control fragment");
+        mCallbacks = sOpenTokCallbacks;
+    }
 
-		return rootView;
-	}
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case com.opentok.android.demo.opentoksamples.R.id.mutePublisher:
+                mutePublisher();
+                break;
 
-	@Override
-	public void onStart() {
-		super.onStart();
-	}
+            case com.opentok.android.demo.opentoksamples.R.id.swapCamera:
+                swapCamera();
+                break;
 
-	@Override
-	public void onResume() {
-		super.onResume();
-	}
+            case com.opentok.android.demo.opentoksamples.R.id.endCall:
+                endCall();
+                break;
+        }
+    }
 
-	@Override
-	public void onPause() {
-		super.onPause();
-	}
+    public void mutePublisher() {
+        mCallbacks.onMutePublisher();
 
-	@Override
-	public void onStop() {
-		super.onStop();
-	}
+        mPublisherMute.setImageResource(openTokActivity.getmPublisher()
+                .getPublishAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_pub
+                : com.opentok.android.demo.opentoksamples.R.drawable.mute_pub);
+    }
 
-	@Override
-	public void onDestroyView() {
-		super.onDestroyView();
-	}
+    public void swapCamera() {
+        mCallbacks.onSwapCamera();
+    }
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-	}
+    public void endCall() {
+        mCallbacks.onEndCall();
+    }
 
-	@Override
-	public void onDetach() {
-		super.onDetach();
-		Log.i(LOGTAG, "On detach Publisher control fragment");
-		mCallbacks = sOpenTokCallbacks;
-	}
+    public void initPublisherUI() {
+        openTokActivity.getmHandler()
+                .removeCallbacks(mPublisherWidgetTimerTask);
+        openTokActivity.getmHandler().postDelayed(mPublisherWidgetTimerTask,
+                PUBLISHER_CONTROLS_DURATION);
+        mPublisherMute.setImageResource(openTokActivity.getmPublisher()
+                .getPublishAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_pub
+                : com.opentok.android.demo.opentoksamples.R.drawable.mute_pub);
 
-	@Override
-	public void onClick(View v) {
-		switch (v.getId()) {
-		case com.opentok.android.demo.opentoksamples.R.id.mutePublisher:
-			mutePublisher();
-			break;
+    }
 
-		case com.opentok.android.demo.opentoksamples.R.id.swapCamera:
-			swapCamera();
-			break;
+    private Runnable mPublisherWidgetTimerTask = new Runnable() {
+        @Override
+        public void run() {
+            showPublisherWidget(false);
+            openTokActivity.setPubViewMargins();
+        }
+    };
 
-		case com.opentok.android.demo.opentoksamples.R.id.endCall:
-			endCall();
-			break;
-		}
-	}
+    public void publisherClick() {
+        if (!mPublisherWidgetVisible) {
+            showPublisherWidget(true);
+        } else {
+            showPublisherWidget(false);
+        }
+        initPublisherUI();
+    }
 
-	public void mutePublisher() {
-		mCallbacks.onMutePublisher();
+    public void showPublisherWidget(boolean show) {
+        showPublisherWidget(show, true);
+    }
 
-		mPublisherMute.setImageResource(openTokActivity.getmPublisher()
-				.getPublishAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_pub
-				: com.opentok.android.demo.opentoksamples.R.drawable.mute_pub);
-	}
+    private void showPublisherWidget(boolean show, boolean animate) {
+        if (mPublisherContainer != null) {
+            mPublisherContainer.clearAnimation();
+            mPublisherWidgetVisible = show;
+            float dest = show ? 1.0f : 0.0f;
+            AlphaAnimation aa = new AlphaAnimation(1.0f - dest, dest);
+            aa.setDuration(animate ? ANIMATION_DURATION : 1);
+            aa.setFillAfter(true);
+            mPublisherContainer.startAnimation(aa);
 
-	public void swapCamera() {
-		mCallbacks.onSwapCamera();
-	}
+            if (show) {
+                mEndCall.setClickable(true);
+                mSwapCamera.setClickable(true);
+                mPublisherMute.setClickable(true);
+                mPublisherContainer.setVisibility(View.VISIBLE);
+            } else {
+                mEndCall.setClickable(false);
+                mSwapCamera.setClickable(false);
+                mPublisherMute.setClickable(false);
+                mPublisherContainer.setVisibility(View.GONE);
+            }
+        }
+    }
 
-	public void endCall() {
-		mCallbacks.onEndCall();
-	}
+    public boolean isMPublisherWidgetVisible() {
+        return mPublisherWidgetVisible;
+    }
 
-	public void initPublisherUI() {
-		openTokActivity.getmHandler()
-				.removeCallbacks(mPublisherWidgetTimerTask);
-		openTokActivity.getmHandler().postDelayed(mPublisherWidgetTimerTask,
-				PUBLISHER_CONTROLS_DURATION);
-		mPublisherMute.setImageResource(openTokActivity.getmPublisher()
-				.getPublishAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_pub
-				: com.opentok.android.demo.opentoksamples.R.drawable.mute_pub);
-
-	}
-
-	private Runnable mPublisherWidgetTimerTask = new Runnable() {
-		@Override
-		public void run() {
-			showPublisherWidget(false);
-			openTokActivity.setPubViewMargins();
-		}
-	};
-
-	public void publisherClick() {
-		if (!mPublisherWidgetVisible) {
-			showPublisherWidget(true);
-		} else {
-			showPublisherWidget(false);
-		}
-		initPublisherUI();
-	}
-
-	public void showPublisherWidget(boolean show) {
-		showPublisherWidget(show, true);
-	}
-
-	private void showPublisherWidget(boolean show, boolean animate) {
-		if ( mPublisherContainer != null ) {
-			mPublisherContainer.clearAnimation();
-			mPublisherWidgetVisible = show;
-			float dest = show ? 1.0f : 0.0f;
-			AlphaAnimation aa = new AlphaAnimation(1.0f - dest, dest);
-			aa.setDuration(animate ? ANIMATION_DURATION : 1);
-			aa.setFillAfter(true);
-			mPublisherContainer.startAnimation(aa);
-
-			if (show) {
-				mEndCall.setClickable(true);
-				mSwapCamera.setClickable(true);
-				mPublisherMute.setClickable(true);
-				mPublisherContainer.setVisibility(View.VISIBLE);
-			} else {
-				mEndCall.setClickable(false);
-				mSwapCamera.setClickable(false);
-				mPublisherMute.setClickable(false);
-				mPublisherContainer.setVisibility(View.GONE);
-			}
-		}
-	}
-
-	public boolean isMPublisherWidgetVisible() {
-		return mPublisherWidgetVisible;
-	}
-
-	public RelativeLayout getMPublisherContainer() {
-		return mPublisherContainer;
-	}
+    public RelativeLayout getMPublisherContainer() {
+        return mPublisherContainer;
+    }
 
 }
