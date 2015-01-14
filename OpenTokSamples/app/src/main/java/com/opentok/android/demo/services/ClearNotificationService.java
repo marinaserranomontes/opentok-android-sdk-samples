@@ -5,6 +5,13 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.Context;
+import android.content.ComponentName;
+
+import java.util.List;
+
 
 public class ClearNotificationService extends Service {
     public static final String MY_SERVICE = "ClearNotificationService";
@@ -42,5 +49,4 @@ public class ClearNotificationService extends Service {
         // Cancel the persistent notification.
         mNotificationManager.cancel(NOTIFICATION_ID);
     }
-
 }

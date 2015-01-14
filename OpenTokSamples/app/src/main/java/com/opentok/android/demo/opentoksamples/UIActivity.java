@@ -320,11 +320,11 @@ public class UIActivity extends Activity implements Session.SessionListener,
         }
 
         if (!mIsBound) {
-            Log.d(LOGTAG, "mISBOUND GOT CALLED");
             bindService(new Intent(UIActivity.this,
                             ClearNotificationService.class), mConnection,
                     Context.BIND_AUTO_CREATE);
             mIsBound = true;
+            startService(notificationIntent);
         }
 
     }
