@@ -12,7 +12,10 @@
     <string name="audiodevice">Audio device</string>
     <string name="helloworldemulator">Emulator Hello World</string>
     <string name="screensharing">Screen Sharing</string>
-    
+    <string name="reconnections">Reconnections</string>
+    <string name="streamprio">Stream prioritization</string>
+    <string name="videodefaultcapturer">Video Default Capturer</string>
+
     <string name="swapStr">Swap camera</string>
     <string name="endCall1">End call</string>
     <string name="endCall2">End</string>
@@ -22,5 +25,8 @@
     <string name="archivingOff">Archiving off</string>
     <string name="notification">Ongoing call</string>
     <string name="clearNotificationService">Clear Notification</string>
+    <string name="title_activity_reconnections">ReconnectionsActivity</string>
+    <string name="title_activity_stream_prioritization">StreamPrioritizationActivity</string>
+    <string name="title_activity_video_defatult_capturer">VideoDefatultCapturer</string>
 
 </resources>

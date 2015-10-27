@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -37,7 +36,10 @@ public class OpenTokSamples extends Activity {
                 getString(R.string.voinceonly),
                 getString(R.string.audiodevice),
                 getString(R.string.helloworldemulator),
-                getString(R.string.screensharing)};
+                getString(R.string.screensharing),
+                getString(R.string.reconnections),
+                getString(R.string.streamprio),
+                getString(R.string.videodefaultcapturer)};
 
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, activityNames);
@@ -68,6 +70,12 @@ public class OpenTokSamples extends Activity {
                     startHelloWorldEmulator();
                 } else if (8 == position) {
                     startScreensharing();
+                } else if (9 == position) {
+                    startReconnections();
+                } else if (10 == position) {
+                    startStreamPrioritization();
+                } else if (11 == position) {
+                    startDefaultVideoCapturer();
                 } else {
                     Log.wtf(LOGTAG, "unknown item clicked?");
                 }
@@ -217,7 +225,7 @@ public class OpenTokSamples extends Activity {
 
     /**
      * Starts the Hello-World app using a custom audio device. See
-     * AudioDeviceActivity.java
+     * ScreenSharingActivity.java
      */
     public void startScreensharing() {
 
@@ -225,6 +233,54 @@ public class OpenTokSamples extends Activity {
 
         Intent intent = new Intent(OpenTokSamples.this,
                 ScreenSharingActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+
+    }
+
+    /**
+     * Starts the Hello-World app using the reconnection feature. See
+     * ReconnectionsActivity.java
+     */
+    public void startReconnections() {
+
+        Log.i(LOGTAG, "starting hello-world app for reconnections");
+
+        Intent intent = new Intent(OpenTokSamples.this,
+                ReconnectionsActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+
+    }
+
+    /**
+     * Starts the Hello-World app using the stream prioritization feature. See
+     * StreamPrioritizationActivity.java
+     */
+    public void startStreamPrioritization() {
+
+        Log.i(LOGTAG, "starting hello-world app for stream prioritization");
+
+        Intent intent = new Intent(OpenTokSamples.this,
+                StreamPrioritizationActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+
+    }
+
+    /**
+     * Starts the Hello-World app using the default video capturer feature. See
+     * VideoDefaultCapturer.java
+     */
+    public void startDefaultVideoCapturer() {
+
+        Log.i(LOGTAG, "starting hello-world app for default video capturer setting a preferred resolution and a framerate");
+
+        Intent intent = new Intent(OpenTokSamples.this,
+                VideoDefatultCapturerActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
