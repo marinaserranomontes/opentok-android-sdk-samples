@@ -29,4 +29,9 @@
         android:keepScreenOn="true">
     </RelativeLayout>
 
+    <com.opentok.android.plugin.AnnotationToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"/>
+
 </RelativeLayout>

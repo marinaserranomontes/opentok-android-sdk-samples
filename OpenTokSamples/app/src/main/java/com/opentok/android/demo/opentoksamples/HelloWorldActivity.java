@@ -20,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.opentok.android.BaseVideoRenderer;
+import com.opentok.android.Connection;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
 import com.opentok.android.PublisherKit;
@@ -29,7 +30,11 @@ import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 import com.opentok.android.demo.config.OpenTokConfig;
 import com.opentok.android.demo.services.ClearNotificationService;
+import com.opentok.android.plugin.AnnotationToolbar;
+import com.opentok.android.plugin.AnnotationVideoRenderer;
+import com.opentok.android.plugin.AnnotationView;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 /**
@@ -39,7 +44,7 @@ import java.util.ArrayList;
  */
 public class HelloWorldActivity extends Activity implements
         Session.SessionListener, Publisher.PublisherListener,
-        Subscriber.VideoListener {
+        Subscriber.VideoListener, Session.SignalListener {
 
     private static final String LOGTAG = "demo-hello-world";
     private Session mSession;
@@ -61,6 +66,7 @@ public class HelloWorldActivity extends Activity implements
     private NotificationManager mNotificationManager;
     private ServiceConnection mConnection;
 
+    private AnnotationToolbar mToolbar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(LOGTAG, "ONCREATE");
@@ -76,10 +82,21 @@ public class HelloWorldActivity extends Activity implements
         mSubscriberViewContainer = (RelativeLayout) findViewById(R.id.subscriberview);
         mLoadingSub = (ProgressBar) findViewById(R.id.loadingSpinner);
 
+        mToolbar = (AnnotationToolbar) findViewById(R.id.toolbar);
+
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         mStreams = new ArrayList<Stream>();
 
+        try {
+            // set environment
+            com.opentok.android.OpenTokConfig.setAPIRootURL("https://anvil-tbrel.opentok.com",
+                    false);
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        com.opentok.android.OpenTokConfig.setJNILogs(true);
         sessionConnect();
     }
 
@@ -239,6 +256,9 @@ public class HelloWorldActivity extends Activity implements
         if (mPublisher == null) {
             mPublisher = new Publisher(HelloWorldActivity.this, "publisher");
             mPublisher.setPublisherListener(this);
+            AnnotationVideoRenderer renderer = new AnnotationVideoRenderer(this);
+            mPublisher.setRenderer(renderer);
+
             attachPublisherView(mPublisher);
             mSession.publish(mPublisher);
         }
@@ -291,6 +311,14 @@ public class HelloWorldActivity extends Activity implements
         mSubscriberViewContainer.addView(mSubscriber.getView(), layoutParams);
         subscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                 BaseVideoRenderer.STYLE_VIDEO_FILL);
+
+        // Add these 3 lines to attach the annotation view to the subscriber view
+        AnnotationView annotationView = new AnnotationView(this);
+        mSubscriberViewContainer.addView(annotationView);
+        annotationView.attachSubscriber(subscriber);
+
+        // Add this line to attach the annotation view to the toolbar
+        annotationView.attachToolbar(mToolbar);
     }
 
     private void attachPublisherView(Publisher publisher) {
@@ -305,6 +333,14 @@ public class HelloWorldActivity extends Activity implements
         layoutParams.bottomMargin = dpToPx(8);
         layoutParams.rightMargin = dpToPx(8);
         mPublisherViewContainer.addView(mPublisher.getView(), layoutParams);
+
+        // Add these 3 lines to attach the annotation view to the publisher view
+        AnnotationView annotationView = new AnnotationView(this);
+        mPublisherViewContainer.addView(annotationView);
+        annotationView.attachPublisher(publisher);
+
+        // Add this line to attach the annotation view to the toolbar
+        annotationView.attachToolbar(mToolbar);
     }
 
     @Override
@@ -395,4 +431,8 @@ public class HelloWorldActivity extends Activity implements
         Log.i(LOGTAG, "Video may no longer be disabled as stream quality improved. Add UI handling here.");
     }
 
+    @Override
+    public void onSignalReceived(Session session, String type, String data, Connection connection) {
+        mToolbar.attachSignal(session, type, data, connection);
+    }
 }

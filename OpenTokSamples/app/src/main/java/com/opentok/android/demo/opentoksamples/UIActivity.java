@@ -46,6 +46,7 @@ import com.opentok.android.demo.ui.fragments.PublisherStatusFragment;
 import com.opentok.android.demo.ui.fragments.SubscriberControlFragment;
 import com.opentok.android.demo.ui.fragments.SubscriberQualityFragment;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 public class UIActivity extends Activity implements Session.SessionListener,
@@ -111,6 +112,17 @@ public class UIActivity extends Activity implements Session.SessionListener,
         }
 
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        try {
+            // set environment
+            com.opentok.android.OpenTokConfig.setAPIRootURL("https://anvil-tbrel.opentok.com",
+                    false);
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        com.opentok.android.OpenTokConfig.setJNILogs(true);
+
 
         sessionConnect();
     }
