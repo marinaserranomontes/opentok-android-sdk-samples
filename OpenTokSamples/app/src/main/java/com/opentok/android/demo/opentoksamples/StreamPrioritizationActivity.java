@@ -290,7 +290,10 @@ public class StreamPrioritizationActivity extends Activity implements
         mSubscriberViewContainer.addView(view, layoutParams);
         subscriber.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                 BaseVideoRenderer.STYLE_VIDEO_FILL);
+
+        //View size as the preferred video resolution
         subscriber.setPreferredResolution(new VideoUtils.Size(view.getWidth(), view.getHeight()));
+        subscriber.setPreferredFrameRate(15);
     }
 
     private void attachPublisherView(Publisher publisher) {

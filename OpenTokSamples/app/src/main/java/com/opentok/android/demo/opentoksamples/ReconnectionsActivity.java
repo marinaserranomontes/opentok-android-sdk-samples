@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
@@ -365,35 +366,6 @@ public class ReconnectionsActivity extends Activity implements
         attachSubscriberView(mSubscriber);
     }
 
-    /**
-     * Converts dp to real pixels, according to the screen density.
-     *
-     * @param dp A number of density-independent pixels.
-     * @return The equivalent number of real pixels.
-     */
-    private int dpToPx(int dp) {
-        double screenDensity = this.getResources().getDisplayMetrics().density;
-        return (int) (screenDensity * (double) dp);
-    }
-
-    private void showReconnectingDialog(boolean show){
-        if (show) {
-            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            dialog.setMessage("Reconnecting. Please wait...");
-            dialog.setIndeterminate(true);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.show();
-        }
-        else {
-            dialog.dismiss();
-            AlertDialog.Builder builder = new AlertDialog.Builder(ReconnectionsActivity.this);
-            builder.setMessage("Session has been reconnected")
-                    .setPositiveButton(android.R.string.ok, null);
-            builder.create();
-            builder.show();
-        }
-    }
-
     @Override
     public void onVideoDisabled(SubscriberKit subscriber, String reason) {
         Log.i(LOGTAG,
@@ -418,23 +390,54 @@ public class ReconnectionsActivity extends Activity implements
     @Override
     public void onReconnecting(Session session) {
         Log.i(LOGTAG, "Session is reconnecting.");
-        showReconnectingDialog(true);
+        showReconnectionDialog(true);
     }
 
     @Override
     public void onReconnected(Session session) {
         Log.i(LOGTAG, "Session is reconnected.");
-        showReconnectingDialog(false);
+        showReconnectionDialog(false);
     }
 
     @Override
     public void onReconnected(SubscriberKit subscriberKit) {
         Log.i(LOGTAG, "Subscriber has been reconnected.");
+        Toast.makeText(ReconnectionsActivity.this, "Subscriber has been reconnected", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onDisconnected(SubscriberKit subscriberKit) {
         Log.i(LOGTAG, "Subscriber has been disconnected.");
     }
+
+    /**
+     * Converts dp to real pixels, according to the screen density.
+     *
+     * @param dp A number of density-independent pixels.
+     * @return The equivalent number of real pixels.
+     */
+    private int dpToPx(int dp) {
+        double screenDensity = this.getResources().getDisplayMetrics().density;
+        return (int) (screenDensity * (double) dp);
+    }
+
+    private void showReconnectionDialog(boolean show){
+        if (show) {
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Reconnecting. Please wait...");
+            dialog.setIndeterminate(true);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+        else {
+            dialog.dismiss();
+            AlertDialog.Builder builder = new AlertDialog.Builder(ReconnectionsActivity.this);
+            builder.setMessage("Session has been reconnected")
+                    .setPositiveButton(android.R.string.ok, null);
+            builder.create();
+            builder.show();
+        }
+    }
+
 }
 

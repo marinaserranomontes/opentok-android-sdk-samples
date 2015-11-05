@@ -29,6 +29,7 @@ import com.opentok.android.SubscriberKit;
 import com.opentok.android.demo.config.OpenTokConfig;
 import com.opentok.android.demo.services.ClearNotificationService;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 public class VideoDefatultCapturerActivity extends Activity implements
@@ -231,6 +232,7 @@ public class VideoDefatultCapturerActivity extends Activity implements
     public void onConnected(Session session) {
         Log.i(LOGTAG, "Connected to the session.");
         if (mPublisher == null) {
+            //Setting the preferred resolution and preferred frameRate for the DefaultVideoCatpurer
             mPublisher = new Publisher(VideoDefatultCapturerActivity.this, "publisher", Publisher.CameraCaptureResolution.LOW, Publisher.CameraCaptureFrameRate.FPS_15);
             mPublisher.setPublisherListener(this);
             attachPublisherView(mPublisher);
