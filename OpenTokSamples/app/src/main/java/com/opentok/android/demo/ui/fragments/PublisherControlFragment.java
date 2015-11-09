@@ -17,7 +17,7 @@ import com.opentok.android.demo.opentoksamples.UIActivity;
 public class PublisherControlFragment extends Fragment implements
         View.OnClickListener {
 
-    private static final String LOGTAG = "demo-UI-pub-control-fragment";
+    private static final String LOGTAG = "pub-control-fragment";
     private static final int ANIMATION_DURATION = 500;
     private static final int PUBLISHER_CONTROLS_DURATION = 7000;
 
@@ -65,17 +65,17 @@ public class PublisherControlFragment extends Fragment implements
         }
 
         mCallbacks = (PublisherCallbacks) activity;
-    }
+      }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View rootView = inflater.inflate(com.opentok.android.demo.opentoksamples.R.layout.layout_fragment_pub_control,
-                container, false);
-
         mPublisherContainer = (RelativeLayout) openTokActivity
                 .findViewById(com.opentok.android.demo.opentoksamples.R.id.fragment_pub_container);
+
+        View rootView = inflater.inflate(com.opentok.android.demo.opentoksamples.R.layout.layout_fragment_pub_control,
+                container, false);
 
         mPublisherMute = (ImageButton) rootView
                 .findViewById(com.opentok.android.demo.opentoksamples.R.id.mutePublisher);
@@ -117,7 +117,7 @@ public class PublisherControlFragment extends Fragment implements
     public void mutePublisher() {
         mCallbacks.onMutePublisher();
 
-        mPublisherMute.setImageResource(openTokActivity.getmPublisher()
+        mPublisherMute.setImageResource(openTokActivity.getPublisher()
                 .getPublishAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_pub
                 : com.opentok.android.demo.opentoksamples.R.drawable.mute_pub);
     }
@@ -131,21 +131,19 @@ public class PublisherControlFragment extends Fragment implements
     }
 
     public void initPublisherUI() {
-        openTokActivity.getmHandler()
+        openTokActivity.getHandler()
                 .removeCallbacks(mPublisherWidgetTimerTask);
-        openTokActivity.getmHandler().postDelayed(mPublisherWidgetTimerTask,
+        openTokActivity.getHandler().postDelayed(mPublisherWidgetTimerTask,
                 PUBLISHER_CONTROLS_DURATION);
-        mPublisherMute.setImageResource(openTokActivity.getmPublisher()
+        mPublisherMute.setImageResource(openTokActivity.getPublisher()
                 .getPublishAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_pub
                 : com.opentok.android.demo.opentoksamples.R.drawable.mute_pub);
-
     }
 
     private Runnable mPublisherWidgetTimerTask = new Runnable() {
         @Override
         public void run() {
             showPublisherWidget(false);
-            openTokActivity.setPubViewMargins();
         }
     };
 
@@ -183,14 +181,15 @@ public class PublisherControlFragment extends Fragment implements
                 mPublisherMute.setClickable(false);
                 mPublisherContainer.setVisibility(View.GONE);
             }
+            openTokActivity.setPubViewMargins();
         }
     }
 
-    public boolean isMPublisherWidgetVisible() {
+    public boolean isPubControlWidgetVisible() {
         return mPublisherWidgetVisible;
     }
 
-    public RelativeLayout getMPublisherContainer() {
+    public RelativeLayout getPublisherContainer() {
         return mPublisherContainer;
     }
 

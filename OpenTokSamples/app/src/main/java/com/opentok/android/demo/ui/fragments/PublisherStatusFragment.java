@@ -20,7 +20,7 @@ import com.opentok.android.demo.ui.fragments.PublisherControlFragment.PublisherC
 
 public class PublisherStatusFragment extends Fragment {
 
-    private static final String LOGTAG = "demo-UI-pub-status-fragment";
+    private static final String LOGTAG = "pub-status-fragment";
     private static final int ANIMATION_DURATION = 500;
     private static final int STATUS_ANIMATION_DURATION = 7000;
 
@@ -119,9 +119,9 @@ public class PublisherStatusFragment extends Fragment {
     }
 
     public void initPubStatusUI() {
-        openTokActivity.getmHandler()
+        openTokActivity.getHandler()
                 .removeCallbacks(mPubStatusWidgetTimerTask);
-        openTokActivity.getmHandler().postDelayed(mPubStatusWidgetTimerTask,
+        openTokActivity.getHandler().postDelayed(mPubStatusWidgetTimerTask,
                 STATUS_ANIMATION_DURATION);
     }
 
@@ -139,11 +139,11 @@ public class PublisherStatusFragment extends Fragment {
         }
     }
 
-    public boolean isMPubStatusWidgetVisible() {
+    public boolean isPubStatusWidgetVisible() {
         return mPubStatusWidgetVisible;
     }
 
-    public RelativeLayout getMPubStatusContainer() {
+    public RelativeLayout getPubStatusContainer() {
         return mPubStatusContainer;
     }
 
