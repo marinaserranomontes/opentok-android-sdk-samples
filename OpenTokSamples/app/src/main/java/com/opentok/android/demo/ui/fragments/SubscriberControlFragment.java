@@ -19,7 +19,7 @@ import com.opentok.android.demo.opentoksamples.UIActivity;
 public class SubscriberControlFragment extends Fragment implements
         View.OnClickListener {
 
-    private static final String LOGTAG = "demo-UI-sub-control-fragment";
+    private static final String LOGTAG = "sub-control-fragment";
 
     private boolean mSubscriberWidgetVisible = false;
     private ImageButton mSubscriberMute;
@@ -160,19 +160,19 @@ public class SubscriberControlFragment extends Fragment implements
     public void muteSubscriber() {
         mCallbacks.onMuteSubscriber();
 
-        mSubscriberMute.setImageResource(openTokActivity.getmSubscriber()
+        mSubscriberMute.setImageResource(openTokActivity.getSubscriber()
                 .getSubscribeToAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_sub
                 : com.opentok.android.demo.opentoksamples.R.drawable.mute_sub);
     }
 
     public void initSubscriberUI() {
-        openTokActivity.getmHandler().removeCallbacks(
+        openTokActivity.getHandler().removeCallbacks(
                 mSubscriberWidgetTimerTask);
-        openTokActivity.getmHandler().postDelayed(mSubscriberWidgetTimerTask,
+        openTokActivity.getHandler().postDelayed(mSubscriberWidgetTimerTask,
                 SUBSCRIBER_CONTROLS_DURATION);
-        mSubscriberName.setText(openTokActivity.getmSubscriber().getStream()
+        mSubscriberName.setText(openTokActivity.getSubscriber().getStream()
                 .getName());
-        mSubscriberMute.setImageResource(openTokActivity.getmSubscriber()
+        mSubscriberMute.setImageResource(openTokActivity.getSubscriber()
                 .getSubscribeToAudio() ? com.opentok.android.demo.opentoksamples.R.drawable.unmute_sub
                 : com.opentok.android.demo.opentoksamples.R.drawable.mute_sub);
     }
