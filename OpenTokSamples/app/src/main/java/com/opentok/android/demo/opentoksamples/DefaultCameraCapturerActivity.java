@@ -232,8 +232,9 @@ public class DefaultCameraCapturerActivity extends Activity implements
     public void onConnected(Session session) {
         Log.i(LOGTAG, "Connected to the session.");
         if (mPublisher == null) {
-            //Setting the preferred resolution and preferred frameRate for the DefaultVideoCatpurer
-            //By default the DefaultVideoCapturer is using the closest supported resolution to 640x480 and the closest supported framerate to 30 fps
+            // Setting the preferred resolution and preferred frameRate for the DefaultVideoCatpurer
+            // By default the DefaultVideoCapturer is using the supported resolution closest to
+            // 352x288 and the supported frame rate closest to 15 fps.
             mPublisher = new Publisher(DefaultCameraCapturerActivity.this, "publisher", Publisher.CameraCaptureResolution.LOW, Publisher.CameraCaptureFrameRate.FPS_15);
             mPublisher.setPublisherListener(this);
             attachPublisherView(mPublisher);

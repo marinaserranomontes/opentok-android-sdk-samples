@@ -335,7 +335,7 @@ public class BasicCustomVideoRenderer extends BaseVideoRenderer{
                 // Decode Yuv data to integer array
                 decodeYUV420(intArray, yuv, width, height);
 
-                //Initialize the bitmap, with the replaced color
+                // Initialize the bitmap, with the replaced color
                 Bitmap bmp = Bitmap.createBitmap(intArray, width, height, Bitmap.Config.ARGB_8888);
 
                 try {

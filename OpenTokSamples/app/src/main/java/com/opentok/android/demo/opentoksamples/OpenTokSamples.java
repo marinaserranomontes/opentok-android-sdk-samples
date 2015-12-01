@@ -245,7 +245,7 @@ public class OpenTokSamples extends Activity {
      */
     public void startDefaultCameraCapturer() {
 
-        Log.i(LOGTAG, "starting hello-world app for default video capturer setting a preferred resolution and a framerate");
+        Log.i(LOGTAG, "starting hello-world app for default video capturer setting a preferred resolution and frame rate");
 
         Intent intent = new Intent(OpenTokSamples.this,
                 DefaultCameraCapturerActivity.class);
