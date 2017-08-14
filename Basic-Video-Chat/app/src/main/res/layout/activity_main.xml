@@ -26,6 +26,19 @@ tools:context="com.tokbox.android.tutorials.basicvideochat.MainActivity">
             android:padding="@dimen/publisher_padding"
             android:background="@color/publisher_border_color" />
 
+        <Button
+            android:text="@string/record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginStart="@dimen/activity_vertical_margin"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:id="@+id/start_record"
+            android:onClick="startRecord"/>
+
     </FrameLayout>
 
 </android.support.constraint.ConstraintLayout>

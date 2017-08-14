@@ -1,10 +1,27 @@
 package com.tokbox.android.tutorials.basicvideochat;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.PixelFormat;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
+import android.media.ImageReader;
+import android.media.MediaRecorder;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.os.Build;
+import android.os.Environment;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.support.annotation.NonNull;
 import android.Manifest;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -18,11 +35,17 @@ import com.opentok.android.Subscriber;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 
+import java.io.IOException;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.AppSettingsDialog;
 import pub.devrel.easypermissions.EasyPermissions;
+
+import static android.media.MediaRecorder.OutputFormat.MPEG_4;
+import static android.media.MediaRecorder.VideoEncoder.H264;
+import static android.media.MediaRecorder.VideoSource.SURFACE;
+import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 
 
 public class MainActivity extends AppCompatActivity
@@ -34,6 +57,9 @@ public class MainActivity extends AppCompatActivity
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final int RC_SETTINGS_SCREEN_PERM = 123;
     private static final int RC_VIDEO_APP_PERM = 124;
+    private static final int RC_WRITE_EXTERNAL_STORAGE = 125;
+    private static final int REQUEST_MEDIA_PROJECTION = 1;
+
 
     // Suppressing this warning. mWebServiceCoordinator will get GarbageCollected if it is local.
     @SuppressWarnings("FieldCanBeLocal")
@@ -46,6 +72,23 @@ public class MainActivity extends AppCompatActivity
     private FrameLayout mPublisherViewContainer;
     private FrameLayout mSubscriberViewContainer;
 
+    private int screenDensity, screenHeight, screenWidth;
+    private MediaRecorder mMediaRecorder;
+    private VirtualDisplay mVirtualDisplay;
+    private MediaProjection mediaProjection;
+    private String directory, filename;
+    private Display defaultDisplay = null;
+    private DisplayMetrics metrics;
+    private boolean isRecording = false;
+    private MediaProjectionManager mMediaProjectionManager;
+    private MediaProjection mMediaProjection;
+    private ImageReader mImageReader;
+
+
+    private int mResultCode;
+    private Intent mResultData;
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -59,6 +102,11 @@ public class MainActivity extends AppCompatActivity
         mSubscriberViewContainer = (FrameLayout)findViewById(R.id.subscriber_container);
 
         requestPermissions();
+        mMediaProjectionManager = (MediaProjectionManager)
+                this.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+
+
+
     }
 
      /* Activity lifecycle methods */
@@ -112,7 +160,7 @@ public class MainActivity extends AppCompatActivity
                     .setRationale(getString(R.string.rationale_ask_again))
                     .setPositiveButton(getString(R.string.setting))
                     .setNegativeButton(getString(R.string.cancel))
-                    .setRequestCode(RC_SETTINGS_SCREEN_PERM)
+                    .setRequestCode(RC_WRITE_EXTERNAL_STORAGE)
                     .build()
                     .show();
         }
@@ -121,7 +169,7 @@ public class MainActivity extends AppCompatActivity
     @AfterPermissionGranted(RC_VIDEO_APP_PERM)
     private void requestPermissions() {
 
-        String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO };
+        String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE };
         if (EasyPermissions.hasPermissions(this, perms)) {
             // if there is no server URL set
             if (OpenTokConfig.CHAT_SERVER_URL == null) {
@@ -145,6 +193,49 @@ public class MainActivity extends AppCompatActivity
             EasyPermissions.requestPermissions(this, getString(R.string.rationale_video_app), RC_VIDEO_APP_PERM, perms);
         }
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_MEDIA_PROJECTION) {
+            if (resultCode != Activity.RESULT_OK) {
+                return;
+            }
+
+            mResultCode = resultCode;
+            mResultData = data;
+            startScreenCapture();
+        }
+    }
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void setUpMediaProjection() {
+        mMediaProjection = mMediaProjectionManager.getMediaProjection(mResultCode, mResultData);
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void setUpVirtualDisplay() {
+
+
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public void startScreenCapture() {
+
+        if (mMediaProjection != null) {
+            Log.i("MARINAS", "MEDIAPROJECTION != NULL");
+            setUpVirtualDisplay();
+        } else if (mResultCode != 0 && mResultData != null) {
+            Log.i("MARINAS", "SETUPMEDIAPROJECTION");
+            setUpMediaProjection();
+            mVirtualDisplay = createVirtualDisplay();
+            startRecording(mMediaProjection);
+
+        } else {
+            startActivityForResult(
+                    mMediaProjectionManager.createScreenCaptureIntent(),
+                    REQUEST_MEDIA_PROJECTION);
+        }
+    }
+
 
     private void initializeSession(String apiKey, String sessionId, String token) {
 
@@ -270,5 +361,106 @@ public class MainActivity extends AppCompatActivity
                 })
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void startRecord(View v) {
+        /*if (!isRecording) {
+            startActivityForResult(
+                    mMediaProjectionManager.createScreenCaptureIntent(),
+                    REQUEST_MEDIA_PROJECTION);
+
+
+        }
+        else {
+            stopRecording();
+            release();
+        }*/
+        mSession.disconnect();
+    }
+
+    private void initRecorder() {
+
+        mMediaRecorder = new MediaRecorder();
+        mMediaRecorder.setVideoSource(SURFACE);
+        mMediaRecorder.setOutputFormat(MPEG_4);
+        mMediaRecorder.setVideoEncoder(H264);
+        mMediaRecorder.setVideoEncodingBitRate(8 * 1000 * 1000);
+        mMediaRecorder.setVideoEncodingBitRate(512 * 1000);
+        mMediaRecorder.setVideoFrameRate(30);
+        mMediaRecorder.setVideoSize(1080, 1920);
+        // mMediaRecorder.setOutputFile(directory + "/" + filename + ".mp4");
+        mMediaRecorder.setOutputFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsoluteFile() + "/marina.mp4");
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    void startRecording(MediaProjection mediaProjection) {
+        mMediaRecorder = new MediaRecorder();
+        initRecorder();
+
+        prepareRecorder();
+        mMediaRecorder.start();
+        isRecording = true;
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private VirtualDisplay createVirtualDisplay() {
+
+        mImageReader = ImageReader.newInstance(540, 888, PixelFormat.RGBA_8888, 2);
+        return mMediaProjection.createVirtualDisplay("MainActivity",
+                540, 888, 240,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                mImageReader.getSurface(), null /*Callbacks*/, null /*Handler*/);
+    }
+
+    void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    void setDirectory(String directory) {
+        this.directory = directory;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    void stopRecording() {
+        if (mMediaProjection != null) {
+            mMediaProjection.stop();
+            mMediaProjection = null;
+        }
+        if (mVirtualDisplay != null) {
+            mVirtualDisplay.release();
+            mVirtualDisplay = null;
+
+        }
+        try{
+            if (mMediaRecorder != null) {
+                mMediaRecorder.stop();
+                mMediaRecorder.release();
+                mMediaRecorder = null;
+            }
+        }catch(RuntimeException stopException){
+            //handle cleanup here
+        }
+
+
+
+    }
+
+
+    private void prepareRecorder() {
+        try {
+            mMediaRecorder.prepare();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void release() {
+        mMediaRecorder.release();
     }
 }

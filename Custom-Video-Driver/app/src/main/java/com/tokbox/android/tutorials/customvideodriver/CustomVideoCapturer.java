@@ -7,13 +7,19 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
+import android.view.TextureView;
 import android.view.WindowManager;
 
 import com.opentok.android.BaseVideoCapturer;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -49,6 +55,11 @@ public class CustomVideoCapturer extends BaseVideoCapturer implements
     private Display mCurrentDisplay;
     private SurfaceTexture mSurfaceTexture;
 
+    private MediaRecorder mMediaRecorder;
+    private File mOutputFile;
+    private boolean isRecording = false;
+
+
     public CustomVideoCapturer(Context context) {
 
         // Initialize front camera by default
@@ -59,6 +70,7 @@ public class CustomVideoCapturer extends BaseVideoCapturer implements
                 .getSystemService(Context.WINDOW_SERVICE);
         mCurrentDisplay = windowManager.getDefaultDisplay();
 
+
     }
 
     @Override
@@ -67,19 +79,27 @@ public class CustomVideoCapturer extends BaseVideoCapturer implements
             return -1;
         }
 
-        // Set the preferred capturing size
-        configureCaptureSize(PREFERRED_CAPTURE_WIDTH, PREFERRED_CAPTURE_HEIGHT);
-
-        // Set the capture parameters
         Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setPreviewSize(mCaptureWidth, mCaptureHeight);
-        parameters.setPreviewFormat(PIXEL_FORMAT);
-        parameters.setPreviewFrameRate(mCaptureFPS);
+        List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
+        List<Camera.Size> mSupportedVideoSizes = parameters.getSupportedVideoSizes();
+        Camera.Size optimalSize = CameraHelper.getOptimalVideoSize(mSupportedVideoSizes,
+                mSupportedPreviewSizes, 520, 700);
+
+        // Use the same size for recording profile.
+        CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+        profile.videoFrameWidth = optimalSize.width;
+        profile.videoFrameHeight = optimalSize.height;
+
+        // likewise for the camera object itself.
+        parameters.setPreviewSize(profile.videoFrameWidth, profile.videoFrameHeight);
+        mCamera.setParameters(parameters);
         try {
-            mCamera.setParameters(parameters);
-        } catch (RuntimeException e) {
-            Log.e(LOGTAG, "setParameters failed", e);
-            return -1;
+            // Requires API level 11+, For backward compatibility use {@link setPreviewDisplay}
+            // with {@link SurfaceView}
+            mCamera.setPreviewTexture(mSurfaceTexture);
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Surface texture is unavailable or unsuitable" + e.getMessage());
+
         }
 
         // Create capture buffers
@@ -103,8 +123,8 @@ public class CustomVideoCapturer extends BaseVideoCapturer implements
         }
 
         // Start preview
-        mCamera.setPreviewCallbackWithBuffer(this);
-        mCamera.startPreview();
+       // mCamera.setPreviewCallbackWithBuffer(this);
+        //mCamera.startPreview();
 
         mPreviewBufferLock.lock();
         mExpectedFrameSize = bufSize;
@@ -122,8 +142,8 @@ public class CustomVideoCapturer extends BaseVideoCapturer implements
         try {
             if (isCaptureRunning) {
                 isCaptureRunning = false;
-                mCamera.stopPreview();
-                mCamera.setPreviewCallbackWithBuffer(null);
+              //  mCamera.stopPreview();
+              //  mCamera.setPreviewCallbackWithBuffer(null);
             }
         } catch (RuntimeException e) {
             Log.e(LOGTAG, "Failed to stop camera", e);
@@ -338,4 +358,162 @@ public class CustomVideoCapturer extends BaseVideoCapturer implements
         mPreviewBufferLock.unlock();
     }
 
+
+    public void onCapture() {
+        if (isRecording) {
+            Log.i("MARINAS", "isRecording");
+            // BEGIN_INCLUDE(stop_release_media_recorder)
+
+            // stop recording and release camera
+            try {
+                mMediaRecorder.stop();  // stop the recording
+            } catch (RuntimeException e) {
+                // RuntimeException is thrown when stop() is called immediately after start().
+                // In this case the output file is not properly constructed ans should be deleted.
+                Log.d(LOGTAG, "RuntimeException: stop() is called immediately after start()");
+                //noinspection ResultOfMethodCallIgnored
+                mOutputFile.delete();
+            }
+            releaseMediaRecorder(); // release the MediaRecorder object
+            mCamera.lock();         // take camera access back from MediaRecorder
+
+            // inform the user that recording has stopped
+            isRecording = false;
+            releaseCamera();
+            // END_INCLUDE(stop_release_media_recorder)
+
+        } else {
+
+            // BEGIN_INCLUDE(prepare_start_media_recorder)
+
+            new MediaPrepareTask().execute(null, null, null);
+
+            // END_INCLUDE(prepare_start_media_recorder)
+
+        }
+    }
+
+    private void releaseMediaRecorder(){
+        Log.i("MARINAS", "releaseMediaRecorder");
+        if (mMediaRecorder != null) {
+            // clear recorder configuration
+            mMediaRecorder.reset();
+            // release the recorder object
+            mMediaRecorder.release();
+            mMediaRecorder = null;
+            // Lock camera for later use i.e taking it back from MediaRecorder.
+            // MediaRecorder doesn't need it anymore and we will release it if the activity pauses.
+            mCamera.lock();
+        }
+    }
+
+    private void releaseCamera(){
+        if (mCamera != null){
+            // release the camera for other applications
+            mCamera.release();
+            mCamera = null;
+        }
+    }
+
+    private boolean prepareVideoRecorder(){
+
+        // BEGIN_INCLUDE (configure_preview)
+      //  mCamera = CameraHelper.getDefaultCameraInstance();
+
+        // We need to make sure that our preview and recording video size are supported by the
+        // camera. Query camera to find all the sizes and choose the optimal size given the
+        // dimensions of our preview surface.
+        Camera.Parameters parameters = mCamera.getParameters();
+        List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
+        List<Camera.Size> mSupportedVideoSizes = parameters.getSupportedVideoSizes();
+        Camera.Size optimalSize = CameraHelper.getOptimalVideoSize(mSupportedVideoSizes,
+                mSupportedPreviewSizes, 520, 700);
+
+        // Use the same size for recording profile.
+        CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+        profile.videoFrameWidth = optimalSize.width;
+        profile.videoFrameHeight = optimalSize.height;
+
+        // likewise for the camera object itself.
+        parameters.setPreviewSize(profile.videoFrameWidth, profile.videoFrameHeight);
+        mCamera.setParameters(parameters);
+        try {
+            // Requires API level 11+, For backward compatibility use {@link setPreviewDisplay}
+            // with {@link SurfaceView}
+            mCamera.setPreviewTexture(mSurfaceTexture);
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Surface texture is unavailable or unsuitable" + e.getMessage());
+            return false;
+        }
+        // END_INCLUDE (configure_preview)
+
+
+        // BEGIN_INCLUDE (configure_media_recorder)
+        mMediaRecorder = new MediaRecorder();
+
+        // Step 1: Unlock and set camera to MediaRecorder
+        mCamera.unlock();
+        mMediaRecorder.setCamera(mCamera);
+
+        // Step 2: Set sources
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT );
+        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+        // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
+        mMediaRecorder.setProfile(profile);
+
+        // Step 4: Set output file
+        mOutputFile = CameraHelper.getOutputMediaFile(CameraHelper.MEDIA_TYPE_VIDEO);
+        if (mOutputFile == null) {
+            return false;
+        }
+        mMediaRecorder.setOutputFile(mOutputFile.getPath());
+        // END_INCLUDE (configure_media_recorder)
+
+        // Step 5: Prepare configured MediaRecorder
+        try {
+            mMediaRecorder.prepare();
+        } catch (IllegalStateException e) {
+            Log.d(LOGTAG, "IllegalStateException preparing MediaRecorder: " + e.getMessage());
+            releaseMediaRecorder();
+            return false;
+        } catch (IOException e) {
+            Log.d(LOGTAG, "IOException preparing MediaRecorder: " + e.getMessage());
+            releaseMediaRecorder();
+            return false;
+        }
+        return true;
+
+    }
+
+    /**
+     * Asynchronous task for preparing the {@link android.media.MediaRecorder} since it's a long blocking
+     * operation.
+     */
+    class MediaPrepareTask extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            // initialize video camera
+            if (prepareVideoRecorder()) {
+                Log.i("MARINAS", "PREPAREVIDEORECORDER");
+                // Camera is available and unlocked, MediaRecorder is prepared,
+                // now you can start recording
+                mMediaRecorder.start();
+
+                isRecording = true;
+            } else {
+                // prepare didn't work, release the camera
+                releaseMediaRecorder();
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+
+
+        }
+    }
 }

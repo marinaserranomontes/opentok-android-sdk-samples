@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.TextureView;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int RC_SETTINGS_SCREEN_PERM = 123;
     private static final int RC_VIDEO_APP_PERM = 124;
+    private static final int RC_WRITE_EXTERNAL_STORAGE = 125;
 
     private Session mSession;
     private Publisher mPublisher;
@@ -42,6 +45,8 @@ public class MainActivity extends AppCompatActivity
 
     private RelativeLayout mPublisherViewContainer;
     private LinearLayout mSubscriberViewContainer;
+
+    private CustomVideoCapturer mCapturer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +118,7 @@ public class MainActivity extends AppCompatActivity
                     .setRationale(getString(R.string.rationale_ask_again))
                     .setPositiveButton(getString(R.string.setting))
                     .setNegativeButton(getString(R.string.cancel))
-                    .setRequestCode(RC_SETTINGS_SCREEN_PERM)
+                    .setRequestCode(RC_WRITE_EXTERNAL_STORAGE)
                     .build()
                     .show();
         }
@@ -121,9 +126,19 @@ public class MainActivity extends AppCompatActivity
 
     @AfterPermissionGranted(RC_VIDEO_APP_PERM)
     private void requestPermissions() {
-        String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO };
+        String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE };
         if (EasyPermissions.hasPermissions(this, perms)) {
-            mSession = new Session.Builder(MainActivity.this, OpenTokConfig.API_KEY, OpenTokConfig.SESSION_ID).build();
+
+            mSession = new Session(MainActivity.this, OpenTokConfig.API_KEY, OpenTokConfig.SESSION_ID, new Session.SessionOptions() {
+
+                @Override
+                public boolean useTextureViews() {
+                    return true;
+                }
+            });
+
+
+
             mSession.setSessionListener(this);
             mSession.connect(OpenTokConfig.TOKEN);
         } else {
@@ -133,10 +148,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnected(Session session) {
         Log.d(TAG, "onConnected: Connected to session " + session.getSessionId());
-
+        mCapturer = new CustomVideoCapturer(MainActivity.this);
         mPublisher = new Publisher.Builder(MainActivity.this)
                 .name("publisher")
-                .capturer(new CustomVideoCapturer(MainActivity.this))
+                .capturer(mCapturer)
                 .renderer(new InvertedColorsVideoRenderer(MainActivity.this)).build();
         mPublisher.setPublisherListener(this);
 
@@ -266,11 +281,16 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (mPublisher != null) {
-            mPublisherViewContainer.removeView(mPublisher.getView());
+             mPublisherViewContainer.removeView(mPublisher.getView());
             mSession.unpublish(mPublisher);
             mPublisher.destroy();
             mPublisher = null;
         }
         mSession.disconnect();
+    }
+
+    public void capture(View v) {
+        Log.i("MARINAS", "CAPTURE");
+        mCapturer.onCapture();
     }
 }
